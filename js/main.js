@@ -43,6 +43,8 @@ const marks_obtained = document.querySelector('.marks_obtained')
 const total_marks = document.querySelector('.total_marks')
 const time_taken = document.querySelector('.time_taken')
 const percent_obtained = document.querySelector('.percent_obtained')
+const retest_button = document.querySelector('.retest_button')
+
 
 //VOLUME CONTROL REFERENCES
 const volume_slidebar = document.getElementById('volume_slidebar')
@@ -283,6 +285,11 @@ function resultGenerator(){
     percent_obtained.textContent = `${((marks / amount_of_questions)*100).toFixed(2)}`
     
     const all_questions_div = document.querySelector('.all_questions_div')
+    
+    // Removing child if there are any question of previous round.
+    while(all_questions_div.children.length !=0 ){
+        all_questions_div.removeChild(all_questions_div.lastElementChild)
+    }
 
     let n = 1
     while (n!=amount_of_questions+1) {
@@ -319,6 +326,27 @@ function resultGenerator(){
     }
 
     result_page.style.display = 'flex'
+    
+    //Event Listener for Retest Button
+    retest_button.addEventListener('click', function (){
+            
+            result_page.style.display = 'none'
+            questions_array = []
+            user_answers_array = []
+            real_answers_array = []
+            right_or_wrong_array = []
+            marks = 0;
+            current_q_no = 1;
+
+            //styles removed for default test page view
+            question_done_btn.style.removeProperty('background-color')
+            document.body.style.removeProperty('background-image')
+            document.body.style.removeProperty('background-color')
+            question_done_btn.textContent = "Done!"
+
+            createTestpage()
+
+    })
 
 
 }
