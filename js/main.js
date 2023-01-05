@@ -1,6 +1,6 @@
-
 window.onbeforeunload = function (e) {
     e = e || window.event;
+    localStorage.setItem('close_time', Date.now() - start_time)
 
     // For IE and Firefox prior to version 4
     if (e) {
@@ -10,20 +10,53 @@ window.onbeforeunload = function (e) {
     // For Safari
     return 'Sure?';
 };
+
+let questions_array = []
+let user_answers_array = []
+let real_answers_array = []
+let right_or_wrong_array = []
+let marks = 0;
+let current_q_no = 1;
+let start_time
+let close_time
+let end_time
+
+const saveState = (key, value) => {
+    localStorage.setItem(key, value)
+}
+
+window.onload = function () {
+    questions_array = JSON.parse(localStorage.getItem('questions_array')) || []
+    user_answers_array = JSON.parse(localStorage.getItem('user_answers_array')) || []
+    real_answers_array = JSON.parse(localStorage.getItem('real_answers_array')) || []
+    right_or_wrong_array = JSON.parse(localStorage.getItem('right_or_wrong_array')) || []
+    marks = parseInt(localStorage.getItem('marks')) || 0
+    current_q_no = parseInt(localStorage.getItem('current_q_no')) || 1
+    student_name = localStorage.getItem('student_name') || ""
+    q_type = localStorage.getItem('q_type') || ""
+    diff_lvl = localStorage.getItem('diff_lvl') || ""
+    amount_of_questions = parseInt(localStorage.getItem('amount_of_questions')) || null
+    negative_marking = JSON.parse(localStorage.getItem('negative_marking')) || null
+    close_time = parseInt(localStorage.getItem('close_time')) || 0
+
+    if(student_name !== "") {
+        main_form_div.remove()
+        start_test_div.style.display = 'flex'
+        createTestpage()
+        return
+    }
+}
+
+
 // TEST FORM NODES REFERENCES
 const main_form_div = document.querySelector('.test_form')
 const form_submit_btn = document.querySelector('#submit_test_form')
 form_submit_btn.addEventListener('click', getValues)
 
-
 // STARTING TEST NODES REFERENCES
 const test_page = document.querySelector('.test_page')
 const start_test_div = document.querySelector('.start_test_div')
 const start_now_btn = document.querySelector('.start_now_btn')
-
-
-
-
 
 // TEST PAGE NODES REFERENCES
 const test_title = document.querySelector('.test_title')
@@ -34,7 +67,6 @@ const next_btn = document.querySelector(".next_question_btn");
 const upNumber = document.querySelector('.upNumber')
 const sign = document.querySelector('.sign')
 const downNumber = document.querySelector('.downNumber')
-
 
 // RESULTS PAGE NODES REFERENCES
 const result_page = document.querySelector('.result_page')
@@ -59,8 +91,6 @@ question_done_btn.addEventListener('click', getAnswer)
 prev_btn.addEventListener('click', prevQuestion)
 next_btn.addEventListener('click', nextQuestion)
 
-
-
 // ENGINE OF THE TEST
 // 1. Decide up and down numbers
 // 2. Decide the sign
@@ -68,15 +98,6 @@ next_btn.addEventListener('click', nextQuestion)
 // 4. Do check for negative marking to deduct on every wrong answer
 // 5. Keep the number of question in check
 // 6. Keep changing the time countdown above
-
-
-
-let questions_array = []
-let user_answers_array = []
-let real_answers_array = []
-let right_or_wrong_array = []
-let marks = 0;
-let current_q_no = 1;
 
 function generateNumbers_and_sign(diff_lvl, sign) {
     let max;
@@ -162,15 +183,23 @@ function getAnswer(){
         user_answers_array[current_q_no - 1] = ans_of_user;
     else user_answers_array.push(ans_of_user);
 
-    current_q_no = current_q_no+1
+    current_q_no = current_q_no + 1
+
+    saveState("current_q_no", current_q_no)
+    saveState("questions_array", JSON.stringify(questions_array))
+    saveState("user_answers_array", JSON.stringify(user_answers_array))
+    saveState("real_answers_array", JSON.stringify(real_answers_array))
+    saveState("right_or_wrong_array", JSON.stringify(right_or_wrong_array))
+    saveState("marks", marks)
+    saveState("current_q_no", current_q_no)
 
     if (current_q_no == amount_of_questions + 1) {
         sound_player("final_question", "start")
         end_time = Date.now()
-
+        localStorage.clear()
         resultGenerator()
     }
-    
+
     questionBoxGenerator()
 }
 
@@ -225,8 +254,9 @@ function examiner(up_number, down_number, sign_of_question , answer_of_student){
 
 }
 
-function resultGenerator(){
-    total_time = end_time - start_time
+function resultGenerator() {
+    total_time = (end_time - start_time) + close_time
+
     time_taken_seconds = parseInt(total_time/1000)
     time_taken_minutes = 00;
     time_taken_hours = 00;
@@ -319,14 +349,10 @@ function resultGenerator(){
     }
 
     result_page.style.display = 'flex'
-
-
 }
 
 
-
-function questionBoxGenerator(){
-
+function questionBoxGenerator() {
     const quotientBox =  document.querySelector('.quotient_from_user');
     const remainderBox = document.querySelector('.remainder_from_user');
     const answerBox = document.querySelector('.answer_from_user');
@@ -429,8 +455,9 @@ function volume_updater(){
     }
 }
 
-function createTestpage(){
+function createTestpage() {
     start_time = Date.now()
+
     sound_player("click_sound", "start")
     sound_player("background_music", "stop")
     sound_player("test_page_bg_music", "start", "loop")
@@ -464,6 +491,12 @@ function getValues() {
     diff_lvl = document.querySelector('#difficulty').value;
     amount_of_questions = parseInt(document.querySelector('#no_of_ques').value);
     negative_marking = document.querySelector('#negmarking').checked;
+
+    saveState('student_name', student_name)
+    saveState('q_type', q_type)
+    saveState('diff_lvl', diff_lvl)
+    saveState('amount_of_questions', amount_of_questions)
+    saveState('negative_marking', negative_marking)
 
     if (student_name.length < 1 || isNaN(amount_of_questions)){
         return;
